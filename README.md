@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Repo Assistant
 
-## Getting Started
+An AI agent that explains any public GitHub repository in plain language — what it does, how it's structured, and where a new contributor should start.
 
-First, run the development server:
+Built with the [Vercel AI SDK](https://sdk.vercel.ai) and tool calling, so the agent fetches real data from GitHub before answering instead of guessing.
 
+## What it does
+
+Ask it things like:
+
+- `explain facebook/react repo`
+- `find good first issues in vercel/next.js`
+- `what does this repo's file structure look like`
+
+The agent picks the right tool for the job — pulling the README, file tree, repo metadata, or open issues directly from the GitHub API — and turns that into a clear, beginner-friendly explanation.
+
+## Tech stack
+
+- **Next.js** (App Router) + **TypeScript**
+- **Vercel AI SDK** — streaming responses and tool calling
+- **Google Gemini** (with Groq as a fallback if quota runs out)
+- **Tailwind CSS v4**
+- **GitHub REST API** for live repo data
+
+## Tools available to the agent
+
+| Tool | What it fetches |
+|---|---|
+| `getReadme` | The repository's README content |
+| `getFileStructure` | Full file/folder tree, to understand the architecture |
+| `getRepoMetadata` | Stars, description, language, topics, open issue count |
+| `getOpenIssues` | Open issues, optionally filtered by label (e.g. `good first issue`) |
+
+## Getting started
+
+**1. Clone and install**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/patelscripts/github-repo-assistant.git
+cd github-repo-assistant
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**2. Set up environment variables**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root:
+```
+GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_key
+GROQ_API_KEY=your_groq_key
+GITHUB_TOKEN=your_github_token
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Gemini key: [aistudio.google.com](https://aistudio.google.com)
+- Groq key: [console.groq.com](https://console.groq.com)
+- GitHub token: Settings → Developer settings → Personal access tokens (classic) — only needs the `public_repo` scope
 
-## Learn More
+**3. Run the dev server**
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+├── api/chat/route.ts     # Agent logic — model, system prompt, tools
+├── page.tsx               # Entry point
+├── layout.tsx              # Fonts, metadata
+components/
+├── Chat.tsx                # Main chat UI
+├── MessageBubble.tsx       # Message rendering (markdown, links, lists)
+├── ToolCallIndicator.tsx   # Shows which tool the agent is running
+lib/
+├── github.ts                # GitHub API helpers
+├── validators.ts            # Repo input validation
+├── tools/                   # Tool definitions the agent can call
+types/
+└── index.ts                 # Shared TypeScript types
+```
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Uses a GitHub personal access token to get a 5,000 requests/hour rate limit instead of the unauthenticated 60/hour.
+- No login or sign-up — designed to work instantly, no account needed.
+- Falls back from Gemini to Groq automatically if the free tier quota is hit.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
