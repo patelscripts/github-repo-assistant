@@ -11,6 +11,7 @@ export default function ErrorBanner({ message, onDismiss }: ErrorBannerProps) {
         <button onClick={onDismiss} className="text-red-500 font-bold ml-2">
           ×
         </button>
+        
       )}
     </div>
   );
