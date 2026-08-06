@@ -9,7 +9,7 @@ export async function POST(req : Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
 
     const result = streamText({
-        model : google("gemini-2.5-flash"),
+        model : google("gemini-2.0-flash"),
         system: `You are a helpful GitHub repository assistant. Your job is to help
       users understand any public GitHub repo — what it does, how it's structured,
       and how a new contributor could get started with it.

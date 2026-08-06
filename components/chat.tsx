@@ -3,22 +3,8 @@
 import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-
-// Render **bold** markdown as <strong>. Keeps the agent's formatting
-// without pulling in a full markdown library.
-function renderInline(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-bold">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return <span key={i}>{part}</span>;
-  });
-}
+import MessageBubble from "./MessageBubble";
+import ToolCallIndicator from "./ToolCallIndicator";
 
 export default function Chat() {
   const [input, setInput] = useState("");
@@ -35,15 +21,28 @@ export default function Chat() {
     setInput("");
   };
 
+  // Agent ka last message check kar raha hai koi tool abhi chal raha hai ya nahi
+  const lastMessage = messages[messages.length - 1];
+  const activeTool =
+    lastMessage?.role === "assistant"
+      ? lastMessage.parts.find(
+          (part) =>
+            part.type.startsWith("tool-") &&
+            "state" in part &&
+            part.state !== "output-available"
+        )
+      : undefined;
+  const activeToolName = activeTool?.type.replace("tool-", "");
+
   return (
-    <div className="flex flex-col h-screen w-full max-w-3xl mx-auto bg-page text-text border rounded-lg mt-4 min-h-screen mb-4">
+    <div className="flex flex-col min-h-screen w-full max-w-3xl mx-auto bg-page text-text border rounded-lg m-4">
       {/* Title bar */}
       <header className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5" aria-hidden="true">
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border-strong" />
+            <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
           </div>
           <h1 className="text-sm font-bold tracking-wide font-sans">
             repo-assistant
@@ -70,40 +69,22 @@ export default function Chat() {
         )}
 
         {messages.map((m) => {
-          const isUser = m.role === "user";
           const text = m.parts
             .filter((part) => part.type === "text")
             .map((part) => (part.type === "text" ? part.text : ""))
             .join("");
 
           return (
-            <div
+            <MessageBubble
               key={m.id}
-              className={`flex flex-col gap-1.5 ${
-                isUser ? "items-end" : "items-start"
-              }`}
-            >
-              <span
-                className={`text-[10px] uppercase tracking-widest font-sans ${
-                  isUser ? "text-text-muted" : "text-text-muted"
-                }`}
-              >
-                {isUser ? "You" : "Agent"}
-              </span>
-              <div
-                className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap rounded-md font-mono ${
-                  isUser
-                    ? "bg-inverse text-inverse-text"
-                    : "bg-surface border border-border text-text"
-                }`}
-              >
-                {renderInline(text)}
-              </div>
-            </div>
+              role={m.role as "user" | "assistant" | "system"}
+              text={text}
+            />
           );
         })}
 
-        {isLoading && (
+        {isLoading && activeToolName && <ToolCallIndicator toolName={activeToolName} />}
+        {isLoading && !activeToolName && (
           <div className="flex items-center gap-2 text-xs font-mono text-text-muted">
             <span className="animate-pulse">▸</span> agent is thinking
           </div>
