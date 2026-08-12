@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function SignupForm() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,14 +30,16 @@ export default function SignupForm() {
         return;
       }
 
-      // Signup ho gaya, ab automatically login bhi kar do
+      // Signup ho gaya, ab automatically login bhi kar do. Let NextAuth
+      // do the redirect — manually calling router.push("/chat") right
+      // after can race the session cookie and the /chat auth() gate
+      // bounces the user back to /.
       await signIn("credentials", {
         email,
         password,
-        redirectTo: "/",
+        redirect: true,
+        redirectTo: "/chat",
       });
-
-      router.push("/");
     } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);

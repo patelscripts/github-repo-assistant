@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Chat from "@/components/chat/chat";
 
 export default function Home() {
   return (
@@ -77,12 +76,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Hidden: keep chat reachable after auth without changing the public
-          landing experience above. Auth-gated routes render <Chat />. */}
-      <div hidden>
-        <Chat />
-      </div>
     </main>
   );
 }

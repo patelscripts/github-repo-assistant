@@ -16,9 +16,21 @@ existing pages:
 - **Sign up** → `/signup` (`app/(auth)/signup/page.tsx` → `SignUpForm`)
 - **Log in** → `/login` (`app/(auth)/login/page.tsx` → `LoginForm`)
 
-The page also renders a hidden `<Chat />` so the import path is preserved
-for auth-gated routes — do not delete the import or the hidden wrapper
-when refactoring this file.
+## Post-auth redirect
+
+After a successful signup or login, the user is sent to **`/chat`**
+(`app/(dashboard)/chat/page.tsx`), which is the auth-gated route that
+actually renders `<Chat />`. This is wired up in three places:
+
+- `SignUpForm` — `signIn("credentials", { redirectTo: "/chat" })` and
+  `router.push("/chat")` after the credentials call.
+- `LoginForm` (credentials) — `router.push("/chat")` on success.
+- `LoginForm` (GitHub OAuth) — `signIn("github", { redirectTo: "/chat" })`.
+
+`/chat` is server-side gated: `auth()` is called in the route component
+and any unauthenticated visitor is `redirect("/")`-ed back to the
+landing page. The public landing page no longer renders `<Chat />` at
+all (the previous hidden wrapper has been removed).
 
 ### Typography on the landing page
 

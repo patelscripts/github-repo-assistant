@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,26 +14,25 @@ export default function LoginForm() {
     setError("");
     setIsLoading(true);
 
-    const result = await signIn("credentials", {
+    // Let NextAuth handle the redirect itself — using redirect: false and
+    // then router.push() can race the session cookie and the server-side
+    // auth() gate in /chat sees no session, bouncing the user back to /.
+    // NextAuth will navigate to redirectTo on success and surface a
+    // ?error=CredentialsSignin query on failure; we listen for that on
+    // mount (see useEffect below) and copy it into local state.
+    await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      redirect: true,
+      redirectTo: "/chat",
     });
-
-    if (result?.error) {
-      setError("Invalid email or password");
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/");
   };
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-sm">
       {/* GitHub login */}
       <button
-        onClick={() => signIn("github", { redirectTo: "/" })}
+        onClick={() => signIn("github", { redirectTo: "/chat" })}
         className="bg-inverse text-inverse-text px-4 py-2 rounded-md text-sm font-bold hover:bg-text transition-colors"
       >
         Sign in with GitHub

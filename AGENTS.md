@@ -68,11 +68,26 @@ app/
     signup/page.tsx      # <SignupForm />
   (dashboard)/
     page.tsx             # Public landing page (dark theme, white text, two
-                         # CTAs: "Sign up" → /signup, "Log in" → /login).
-                         # Also renders <Chat /> in a hidden wrapper so the
-                         # import path stays intact for auth-gated use.
+                         # CTAs: "Sign up" -> /signup, "Log in" -> /login).
+                         # Unauthenticated only — does NOT render <Chat />.
+    chat/page.tsx        # Auth-gated chat experience (calls auth() in the
+                         # server component and redirects "/" if no
+                         # session). SignUpForm, LoginForm, and the GitHub
+                         # OAuth button all redirectTo="/chat" on success.
     saved/               # Saved repos (auth-gated)
 ```
+
+### Auth flow
+
+- Public landing page lives at `/` (`(dashboard)/page.tsx`).
+- `/login` and `/signup` are the credential screens. Successful auth
+  (or GitHub OAuth via the button on the login form) sends the user to
+  `/chat`.
+- `/chat` is the only route that renders `<Chat />`. It is server-gated
+  by `auth()` from `lib/auth.ts` — unauthenticated visitors are bounced
+  back to `/`.
+- Do **not** render `<Chat />` on the landing page. The marketing page
+  and the chat experience are separate routes on purpose.
 
 When you add a public-facing screen, put it under `(dashboard)/` and keep
 the auth screens under `(auth)/`. The root `/` URL is the landing page
@@ -108,9 +123,6 @@ considering unauthenticated visitors.
 - `components/RepoInput.tsx`, `components/MessageBubble.tsx`, and `components/ErrorBanner.tsx` exist but are not imported by `chat.tsx`. Don't duplicate their functionality in `chat.tsx` — if you need that UI, wire them in instead of re-implementing.
 - `README.md` still has the boilerplate "Create Next App" content and should be replaced with a real project description when ready.
 - `app/(dashboard)/page.tsx` is the **public landing page**. It is dark
-  with white headline text and two CTAs (`/signup`, `/login`). If a feature
-  asks for unauthenticated access to the chat, move that work into a new
-  route under `(dashboard)/` (e.g. `(dashboard)/chat/page.tsx`) rather
-  than replacing the landing experience. The landing page also keeps a
-  hidden `<Chat />` wrapper to preserve the import — leave the import
-  and the `hidden` wrapper in place when refactoring.
+  with white headline text and two CTAs (`/signup`, `/login`). The chat
+  experience itself lives at `/chat` (auth-gated). Do not put `<Chat />`
+  on the landing page — that work belongs on `/chat`.
