@@ -1,4 +1,4 @@
-import { Document, model, models, Schema } from "mongoose";
+import { Document, Model, model, models, Schema } from "mongoose";
 
 export interface IUser extends Document{
     name : string;
@@ -20,4 +20,4 @@ const UserSchema = new Schema<IUser>({
   createdAt: { type: Date, default: Date.now },
 });
 
-export const User = models || model<IUser>("User", UserSchema)
+export const User = (models.User as Model<IUser>) || model<IUser>("User", UserSchema)
