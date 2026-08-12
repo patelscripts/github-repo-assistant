@@ -50,6 +50,37 @@ types/
   index.ts          # Shared types: RepoMetadata, GithubIssue, GithubTreeItem, + Raw* aliases
 ```
 
+### Route groups (actual layout)
+
+The repo groups auth and the main app separately:
+
+```
+app/
+  layout.tsx
+  globals.css
+  api/
+    auth/[...nextauth]/  # NextAuth handler (GitHub OAuth + credentials)
+    chat/route.ts        # streamText + tools
+    repos/               # Saved-repos API
+    signup/route.ts      # Email/password signup
+  (auth)/
+    login/page.tsx       # <LoginForm />
+    signup/page.tsx      # <SignupForm />
+  (dashboard)/
+    page.tsx             # Public landing page (dark theme, white text, two
+                         # CTAs: "Sign up" → /signup, "Log in" → /login).
+                         # Also renders <Chat /> in a hidden wrapper so the
+                         # import path stays intact for auth-gated use.
+    saved/               # Saved repos (auth-gated)
+```
+
+When you add a public-facing screen, put it under `(dashboard)/` and keep
+the auth screens under `(auth)/`. The root `/` URL is the landing page
+defined in `app/(dashboard)/page.tsx` — it is the first thing a visitor
+sees and is dark by design (`bg-page` / `text-text` / `text-white` on
+the headline). Do **not** route `/` straight to `<Chat />` without
+considering unauthenticated visitors.
+
 ### Request flow
 
 1. User types in `components/chat.tsx`, which calls `useChat` with a `DefaultChatTransport` pointing at `/api/chat`.
@@ -76,3 +107,10 @@ types/
 
 - `components/RepoInput.tsx`, `components/MessageBubble.tsx`, and `components/ErrorBanner.tsx` exist but are not imported by `chat.tsx`. Don't duplicate their functionality in `chat.tsx` — if you need that UI, wire them in instead of re-implementing.
 - `README.md` still has the boilerplate "Create Next App" content and should be replaced with a real project description when ready.
+- `app/(dashboard)/page.tsx` is the **public landing page**. It is dark
+  with white headline text and two CTAs (`/signup`, `/login`). If a feature
+  asks for unauthenticated access to the chat, move that work into a new
+  route under `(dashboard)/` (e.g. `(dashboard)/chat/page.tsx`) rather
+  than replacing the landing experience. The landing page also keeps a
+  hidden `<Chat />` wrapper to preserve the import — leave the import
+  and the `hidden` wrapper in place when refactoring.
